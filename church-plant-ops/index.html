@@ -409,7 +409,7 @@ function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 async function loadAll(){
   let saved=lsGet('churches-v1');
   if(saved&&saved.length){churches=saved;}
-  else{churches=[{id:'plant1',name:'242 Community Church',pastor:'Lead Pastor',city:'',launch:'',tasks:makeSeedTasks()},{id:'plant2',name:'Riverside Plant',pastor:'Pastor Smith',city:'',launch:'',tasks:makeSeedTasks().map(t=>({...t,status:'Not Started',due:''}))}];}
+  else{churches=[{id:'plant1',name:'Evergrove Church',pastor:'Lead Pastor',city:'',launch:'',tasks:makeSeedTasks()}];}
   let meta=lsGet('task-meta-v1');
   if(meta)taskMeta=meta;
   activeChurchId=churches[0].id;
