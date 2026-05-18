@@ -330,6 +330,8 @@ body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;background:#f2f2f0;
   </div>
 </div>
 
+<div id="loading-overlay" style="display:none;position:fixed;inset:0;background:rgba(242,242,240,.8);z-index:200;align-items:center;justify-content:center"><div style="text-align:center;color:var(--grey-mid)"><i class="ti ti-loader" style="font-size:28px;display:block;animation:spin 1s linear infinite"></i><div style="margin-top:12px;font-size:13px">Loading…</div></div></div>
+
 <div id="save-toast" style="display:none;position:fixed;bottom:20px;right:20px;background:#4f4f4f;color:#fff;padding:9px 16px;border-radius:6px;font-size:12px;font-weight:600;z-index:999;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,.2)"><i class="ti ti-check" style="color:#4caf72"></i>Saved</div>
 
 <!-- TASK DRAWER -->
@@ -494,6 +496,7 @@ async function boot(){
   document.getElementById('user-display').textContent=currentUser.email;
   showLoading();
   await loadAll();
+  hideLoading();
   renderTabs();
   renderDashboard();
 }
@@ -530,13 +533,8 @@ async function doSignup(){
 async function doSignOut(){await sb.auth.signOut();}
 
 // ── DATA ──────────────────────────────────────────────────────────────────────
-function showLoading(){
-  document.getElementById('content').innerHTML='<div style="text-align:center;padding:80px 0;color:var(--grey-mid)"><i class="ti ti-loader" style="font-size:28px;display:block;margin:0 auto 12px;animation:spin 1s linear infinite"></i><div style="font-size:13px">Loading…</div></div>';
-  // restore pages after a tick so innerHTML reset doesn't break subsequent renders
-  setTimeout(()=>{
-    if(!document.getElementById('page-dashboard')){location.reload();}
-  },3000);
-}
+function showLoading(){document.getElementById('loading-overlay').style.display='flex';}
+function hideLoading(){document.getElementById('loading-overlay').style.display='none';}
 
 async function loadAll(){
   const {data:memberships,error}=await sb
