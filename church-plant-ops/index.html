@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>242 Church Plant Launch System</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;background:#f2f2f0;color:#4f4f4f;font-size:14px;display:flex;min-height:100vh}
+:root{
+  --blue:#508dba;--blue-dark:#3a6f96;--blue-light:#e8f2f9;--blue-mid:#cce0ef;
+  --green:#449c4e;--green-bg:#eaf5eb;
+  --orange:#db8952;--orange-bg:#fdf2e9;
+  --grey-dark:#4f4f4f;--grey-mid:#7b7b7b;--grey-light:#d2d2d2;--grey-bg:#f2f2f0;
+  --white:#ffffff;--border:#d2d2d2;--radius:8px;
+  --sidebar:#3e3e3e;
+  --danger:#c0392b;--danger-bg:#fdf0ef;
+  --warning:#c87d2a;--warning-bg:#fdf5ec;
+}
+
+/* SIDEBAR */
+#sidebar{width:224px;background:var(--sidebar);color:#fff;display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;overflow-y:auto}
+.sidebar-logo{padding:20px 18px 14px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sidebar-subtitle{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-top:8px;font-weight:500}
+.sidebar-section{padding:18px 14px 4px;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.35);font-weight:700}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:6px;cursor:pointer;color:rgba(255,255,255,.6);font-size:13px;font-weight:400;transition:all .15s;margin:1px 6px}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-item.active{background:var(--blue);color:#fff}
+.nav-item i{font-size:16px;flex-shrink:0}
+.sidebar-bottom{margin-top:auto;padding:14px;border-top:1px solid rgba(255,255,255,.1)}
+.disclaimer-pill{background:rgba(219,137,82,.12);border:1px solid rgba(219,137,82,.3);color:#e8a870;font-size:11px;padding:10px 12px;border-radius:6px;line-height:1.6}
+
+/* TOPBAR */
+#main{margin-left:224px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+#topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:stretch;justify-content:space-between;position:sticky;top:0;z-index:50;min-height:56px}
+.topbar-left{display:flex;align-items:center;gap:0}
+.church-tab{display:flex;align-items:center;gap:8px;padding:0 18px;font-size:13px;font-weight:600;cursor:pointer;border-bottom:3px solid transparent;color:var(--grey-mid);transition:all .15s;white-space:nowrap;height:56px;text-transform:lowercase}
+.church-tab:hover{color:var(--grey-dark);background:#fafafa}
+.church-tab.active-tab{color:var(--blue);border-bottom-color:var(--blue);background:var(--blue-light)}
+.add-church-btn{display:flex;align-items:center;gap:6px;padding:0 14px;font-size:12px;color:var(--grey-mid);cursor:pointer;border-left:1px solid var(--border);height:56px;transition:all .15s;font-weight:600;white-space:nowrap}
+.add-church-btn:hover{background:#fafafa;color:var(--blue)}
+.topbar-right{display:flex;align-items:center;gap:10px;padding:10px 0}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--grey-mid);transition:all .15s;letter-spacing:.03em;text-transform:uppercase}
+.btn:hover{background:var(--grey-bg);border-color:#bbb;color:var(--grey-dark)}
+.btn-blue{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-blue:hover{background:var(--blue-dark);border-color:var(--blue-dark)}
+.btn-sm{padding:6px 12px;font-size:11px}
+
+/* CONTENT */
+#content{padding:24px;flex:1}
+.card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:20px}
+.card-title{font-size:11px;font-weight:700;color:var(--grey-dark);margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;letter-spacing:.1em;text-transform:uppercase}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px}
+
+/* METRICS */
+.metric{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px;position:relative;overflow:hidden}
+.metric-label{font-size:9px;color:var(--grey-mid);font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.metric-value{font-size:30px;font-weight:700;color:var(--grey-dark)}
+.metric-sub{font-size:11px;color:var(--grey-mid);margin-top:4px}
+.metric-icon{position:absolute;right:14px;top:14px;width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.metric-bar{height:4px;background:#e8e8e8;border-radius:10px;overflow:hidden;margin:8px 0 4px}
+.metric-bar-fill{height:100%;border-radius:10px;background:var(--blue);transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+
+/* PHASES */
+.phases{display:flex;gap:3px;margin-bottom:22px;overflow-x:auto}
+.phase-item{flex:1;min-width:80px;text-align:center;padding:10px 4px;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .15s;border-radius:6px;border:1px solid transparent}
+.phase-done{background:var(--blue);color:#fff;border-color:var(--blue)}
+.phase-active{background:var(--white);color:var(--blue);border-color:var(--blue)}
+.phase-pending{background:var(--white);color:var(--grey-mid);border-color:var(--border)}
+.phase-num{display:block;font-size:20px;font-weight:900;margin-bottom:2px}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;white-space:nowrap;letter-spacing:.04em;text-transform:uppercase}
+.badge-complete{background:var(--green-bg);color:#2d7a35}
+.badge-progress{background:var(--blue-light);color:var(--blue-dark)}
+.badge-review{background:var(--warning-bg);color:var(--warning)}
+.badge-notstarted{background:#f2f2f0;color:#999}
+.badge-high{background:var(--danger-bg);color:var(--danger)}
+.badge-medium{background:var(--warning-bg);color:var(--warning)}
+.badge-low{background:var(--green-bg);color:#2d7a35}
+
+/* TABLE */
+.task-table{width:100%;border-collapse:collapse}
+.task-table thead th{text-align:left;padding:9px 12px;font-size:9px;color:var(--grey-mid);font-weight:700;text-transform:uppercase;letter-spacing:.08em;border-bottom:2px solid var(--border);background:#fafafa}
+.task-table tbody tr{border-bottom:1px solid #f0f0f0;transition:background .1s;cursor:pointer}
+.task-table tbody tr:hover{background:var(--blue-light)}
+.task-table td{padding:11px 12px;vertical-align:middle;font-size:13px}
+.owner-chip{display:inline-flex;align-items:center;gap:5px;background:#f2f2f0;border:1px solid var(--border);border-radius:20px;padding:3px 8px;font-size:11px;color:var(--grey-mid)}
+.owner-av{width:18px;height:18px;border-radius:50%;background:var(--blue);color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.doc-count{display:inline-flex;align-items:center;gap:3px;font-size:10px;color:var(--blue);background:var(--blue-light);padding:2px 7px;border-radius:10px;font-weight:600}
+
+/* FILTER */
+.filter-bar{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.filter-btn{padding:6px 14px;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--grey-mid);transition:all .15s;letter-spacing:.06em;text-transform:uppercase}
+.filter-btn:hover{border-color:#aaa;color:var(--grey-dark)}
+.filter-btn.active-f{background:var(--blue);color:#fff;border-color:var(--blue)}
+.search-box{margin-left:auto;position:relative}
+.search-box input{padding:7px 12px 7px 32px;border-radius:20px;border:1px solid var(--border);font-size:12px;outline:none;width:200px;background:var(--white);color:var(--grey-dark);font-family:inherit}
+.search-box input:focus{border-color:var(--blue)}
+.search-box i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--grey-light);font-size:15px}
+.phase-tag{font-size:9px;background:var(--blue-light);color:var(--blue-dark);padding:2px 7px;border-radius:3px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+
+/* INFO BANNER */
+.info-banner{background:var(--orange-bg);border:1px solid #f0c8a0;border-radius:6px;padding:12px 16px;font-size:13px;color:#9a5a20;display:flex;align-items:flex-start;gap:10px;margin-bottom:20px;line-height:1.6}
+
+/* PAGES */
+.page{display:none}.page.active{display:block}
+
+/* DRAWER */
+#drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:300}
+#drawer-overlay.open{display:block}
+#drawer{position:fixed;top:0;right:-540px;width:540px;height:100vh;background:var(--white);z-index:400;box-shadow:-4px 0 24px rgba(0,0,0,.12);display:flex;flex-direction:column;transition:right .25s cubic-bezier(.4,0,.2,1);overflow:hidden}
+#drawer.open{right:0}
+.drawer-header{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;background:#fafafa}
+.drawer-title{font-size:16px;font-weight:700;color:var(--grey-dark);text-transform:lowercase;line-height:1.3}
+.drawer-cat{font-size:10px;color:var(--grey-mid);text-transform:uppercase;letter-spacing:.08em;margin-top:3px}
+.drawer-close{background:none;border:none;cursor:pointer;color:var(--grey-mid);font-size:20px;padding:4px;border-radius:4px;display:flex}
+.drawer-close:hover{background:#f0f0f0;color:var(--grey-dark)}
+.drawer-body{flex:1;overflow-y:auto}
+.drawer-section{padding:18px 20px;border-bottom:1px solid #f0f0f0}
+.drawer-section-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--grey-mid);margin-bottom:12px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.detail-item{display:flex;flex-direction:column;gap:3px}
+.detail-label{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--grey-mid);font-weight:700}
+.status-select{border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:12px;font-family:inherit;color:var(--grey-dark);background:var(--white);width:100%;outline:none;cursor:pointer;font-weight:500}
+.status-select:focus{border-color:var(--blue)}
+.note-entry{background:#fafafa;border-radius:6px;padding:10px 12px;margin-bottom:8px;border-left:3px solid var(--blue-mid)}
+.note-ts{font-size:10px;color:var(--grey-mid);margin-bottom:4px}
+.note-text{font-size:13px;color:var(--grey-dark);line-height:1.5}
+.note-input-wrap{display:flex;gap:8px;margin-top:10px}
+.note-input-wrap textarea{flex:1;border:1px solid var(--border);border-radius:6px;padding:9px 12px;font-size:13px;font-family:inherit;resize:none;outline:none;color:var(--grey-dark);min-height:70px}
+.note-input-wrap textarea:focus{border-color:var(--blue)}
+.doc-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:#fafafa;border-radius:6px;margin-bottom:6px}
+.doc-item-left{display:flex;align-items:center;gap:8px}
+.doc-item-left i{color:var(--blue);font-size:16px}
+.doc-name{font-size:13px;font-weight:600;color:var(--grey-dark)}
+.doc-url{font-size:11px;color:var(--blue);text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px}
+.doc-remove{background:none;border:none;cursor:pointer;color:#ccc;font-size:16px;padding:2px;border-radius:3px;display:flex}
+.doc-remove:hover{color:var(--danger)}
+.doc-add-form{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.doc-add-form input{border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:12px;font-family:inherit;outline:none;color:var(--grey-dark)}
+.doc-add-form input:focus{border-color:var(--blue)}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:500;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--white);border-radius:10px;padding:28px;width:480px;max-height:85vh;overflow-y:auto;max-width:95vw;border:1px solid var(--border)}
+.modal h3{font-size:18px;font-weight:700;color:var(--grey-dark);margin-bottom:6px}
+.modal-section{margin-top:14px}
+.modal-section label{font-size:10px;color:var(--grey-mid);font-weight:700;display:block;margin-bottom:5px;letter-spacing:.08em;text-transform:uppercase}
+.modal-section input,.modal-section select{width:100%;border:1px solid var(--border);border-radius:6px;padding:9px 12px;font-size:13px;outline:none;background:var(--white);color:var(--grey-dark);font-family:inherit}
+.modal-section input:focus{border-color:var(--blue)}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* PLAYBOOK */
+.playbook-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.playbook-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;cursor:pointer;transition:background .1s}
+.playbook-header:hover{background:#fafafa}
+.playbook-body{display:none;padding:0 18px 16px;border-top:1px solid #f0f0f0}
+
+/* REPORT */
+.report-section{border-left:3px solid var(--blue);padding-left:16px;margin-bottom:22px}
+.report-section h4{font-size:10px;font-weight:700;margin-bottom:10px;color:var(--grey-dark);text-transform:uppercase;letter-spacing:.1em}
+.report-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:13px;color:var(--grey-dark)}
+
+/* CHURCH OVERVIEW */
+.church-overview-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:box-shadow .15s;cursor:pointer}
+.church-overview-card:hover{box-shadow:0 4px 16px rgba(80,141,186,.12);border-color:var(--blue-mid)}
+
+@media(max-width:768px){
+  #sidebar{width:60px}.sidebar-logo{padding:12px 8px}.sidebar-subtitle{display:none}.sidebar-section{display:none}.nav-item{padding:12px 8px;margin:2px 2px}.nav-item i{font-size:18px}
+  #main{margin-left:60px}#topbar{padding:0 16px}.church-tab{padding:0 12px;font-size:11px}.add-church-btn{display:none}#content{padding:16px}.grid-4{grid-template-columns:repeat(2,1fr)}.grid-2{grid-template-columns:1fr}.btn{font-size:10px}#drawer{width:100%}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div style="color:#fff;font-size:22px;font-weight:900;letter-spacing:.1em">242</div>
+    <div class="sidebar-subtitle">launch system</div>
+  </div>
+  <div class="sidebar-section">overview</div>
+  <div class="nav-item active" onclick="showPage('dashboard',this)"><i class="ti ti-layout-dashboard"></i>dashboard</div>
+  <div class="nav-item" onclick="showPage('playbook',this)"><i class="ti ti-map-2"></i>playbook</div>
+  <div class="sidebar-section">modules</div>
+  <div class="nav-item" onclick="showPage('legal',this)"><i class="ti ti-gavel"></i>legal</div>
+  <div class="nav-item" onclick="showPage('finance',this)"><i class="ti ti-wallet"></i>finance</div>
+  <div class="nav-item" onclick="showPage('apps',this)"><i class="ti ti-apps"></i>apps</div>
+  <div class="nav-item" onclick="showPage('risk',this)"><i class="ti ti-shield-check"></i>risk</div>
+  <div class="sidebar-section">reports</div>
+  <div class="nav-item" onclick="showPage('report',this)"><i class="ti ti-file-analytics"></i>report</div>
+  <div class="sidebar-section">plants</div>
+  <div class="nav-item" onclick="showPage('overview',this)"><i class="ti ti-building-church"></i>overview</div>
+  <div class="sidebar-bottom">
+    <div class="disclaimer-pill"><i class="ti ti-alert-triangle"></i>Consult attorney, CPA & denomination.</div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="topbar">
+    <div class="topbar-left" id="church-tabs"></div>
+    <div class="topbar-right">
+      <button class="btn btn-sm" onclick="openAddTaskModal()"><i class="ti ti-plus"></i>Task</button>
+      <button class="btn btn-blue btn-sm" onclick="showPage('report',document.querySelector('[onclick*=report]'))"><i class="ti ti-file-report"></i>Report</button>
+    </div>
+  </div>
+
+  <div id="content">
+    <!-- DASHBOARD -->
+    <div id="page-dashboard" class="page active">
+      <div class="info-banner"><i class="ti ti-info-circle"></i><span><strong>Disclaimer:</strong> This system provides guidance only. Consult <strong>attorney</strong>, <strong>CPA</strong>, and <strong>denominational leadership</strong> before actions.</span></div>
+      <div class="phases" id="phase-bar"></div>
+      <div class="grid-4" id="metric-cards"></div>
+      <div class="grid-2">
+        <div class="card"><div class="card-title">by category</div><div id="category-breakdown"></div></div>
+        <div class="card"><div class="card-title">priority tasks</div><div id="priority-list"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">all tasks</div>
+        <div class="filter-bar">
+          <button class="filter-btn active-f" onclick="setFilter('all',this)">All</button>
+          <button class="filter-btn" onclick="setFilter('Not Started',this)">Not Started</button>
+          <button class="filter-btn" onclick="setFilter('In Progress',this)">In Progress</button>
+          <button class="filter-btn" onclick="setFilter('Needs Review',this)">Review</button>
+          <button class="filter-btn" onclick="setFilter('Complete',this)">Complete</button>
+          <div class="search-box"><i class="ti ti-search"></i><input id="search-input" placeholder="Search…" oninput="renderTable('task-tbody')"></div>
+        </div>
+        <div style="overflow-x:auto"><table class="task-table"><thead><tr><th></th><th>Task</th><th>Category</th><th>Owner</th><th>Due</th><th>Status</th><th>Priority</th><th>Docs</th></tr></thead><tbody id="task-tbody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- MODULE PAGES -->
+    <div id="page-legal" class="page">
+      <div class="info-banner"><i class="ti ti-gavel"></i><span>Legal documents require <strong>attorney</strong> review.</span></div>
+      <div class="card"><div class="card-title">legal & governance</div><div style="overflow-x:auto"><table class="task-table"><thead><tr><th></th><th>Task</th><th>Owner</th><th>Due</th><th>Status</th><th>Docs</th></tr></thead><tbody id="legal-tbody"></tbody></table></div></div>
+    </div>
+    <div id="page-finance" class="page">
+      <div class="info-banner"><i class="ti ti-wallet"></i><span>Financial setup requires <strong>CPA</strong> review.</span></div>
+      <div class="card"><div class="card-title">financial operations</div><div style="overflow-x:auto"><table class="task-table"><thead><tr><th></th><th>Task</th><th>Owner</th><th>Due</th><th>Status</th><th>Docs</th></tr></thead><tbody id="finance-tbody"></tbody></table></div></div>
+    </div>
+    <div id="page-apps" class="page">
+      <div class="card"><div class="card-title">ministry apps</div><div style="overflow-x:auto"><table class="task-table"><thead><tr><th></th><th>Task</th><th>Owner</th><th>Due</th><th>Status</th><th>Docs</th></tr></thead><tbody id="apps-tbody"></tbody></table></div></div>
+    </div>
+    <div id="page-risk" class="page">
+      <div class="info-banner"><i class="ti ti-shield-check"></i><span>Risk policies require <strong>attorney</strong> review.</span></div>
+      <div class="card"><div class="card-title">risk & compliance</div><div style="overflow-x:auto"><table class="task-table"><thead><tr><th></th><th>Task</th><th>Owner</th><th>Due</th><th>Status</th><th>Docs</th></tr></thead><tbody id="risk-tbody"></tbody></table></div></div>
+    </div>
+
+    <!-- PLAYBOOK -->
+    <div id="page-playbook" class="page">
+      <div class="grid-4" style="margin-bottom:20px" id="pb-metrics"></div>
+      <div id="playbook-phases"></div>
+    </div>
+
+    <!-- REPORT -->
+    <div id="page-report" class="page">
+      <div class="info-banner"><i class="ti ti-file-analytics"></i><span>Executive summary. All items require professional review.</span></div>
+      <div class="card"><div class="card-title">launch readiness report<button class="btn btn-blue btn-sm" style="margin-left:auto" onclick="alert('PDF export in production version.')"><i class="ti ti-download"></i>Export</button></div><div id="report-body"></div></div>
+    </div>
+
+    <!-- ALL PLANTS -->
+    <div id="page-overview" class="page">
+      <div style="display:flex;justify-content:space-between;margin-bottom:20px">
+        <div><div style="font-size:18px;font-weight:700;color:var(--grey-dark)">all church plants</div></div>
+        <button class="btn btn-blue" onclick="openAddChurchModal()"><i class="ti ti-plus"></i>Add Plant</button>
+      </div>
+      <div id="overview-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px"></div>
+    </div>
+  </div>
+</div>
+
+  <div id="save-toast" style="display:none;position:fixed;bottom:20px;right:20px;background:#4f4f4f;color:#fff;padding:9px 16px;border-radius:6px;font-size:12px;font-weight:600;z-index:999;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,.2)"><i class="ti ti-check" style="color:#4caf72"></i>Saved</div>
+
+  <!-- TASK DRAWER -->
+<div id="drawer-overlay" onclick="closeDrawer()"></div>
+<div id="drawer">
+  <div class="drawer-header">
+    <div style="flex:1">
+      <div class="drawer-title" id="d-title">task</div>
+      <div class="drawer-cat" id="d-cat">category</div>
+    </div>
+    <button class="drawer-close" onclick="closeDrawer()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="drawer-body">
+    <div class="drawer-section">
+      <div class="drawer-section-title">details</div>
+      <div class="detail-grid">
+        <div class="detail-item"><div class="detail-label">Status</div><select class="status-select" id="d-status" onchange="updateField('status',this.value)"><option>Not Started</option><option>In Progress</option><option>Needs Review</option><option>Complete</option></select></div>
+        <div class="detail-item"><div class="detail-label">Priority</div><select class="status-select" id="d-priority" onchange="updateField('priority',this.value)"><option>High</option><option>Medium</option><option>Low</option></select></div>
+        <div class="detail-item"><div class="detail-label">Owner</div><input class="status-select" id="d-owner" onchange="updateField('owner',this.value)"></div>
+        <div class="detail-item"><div class="detail-label">Due Date</div><input class="status-select" id="d-due" type="date" onchange="updateField('due',this.value)"></div>
+      </div>
+    </div>
+    <div class="drawer-section">
+      <div class="drawer-section-title">documents</div>
+      <div id="d-docs-list"></div>
+      <div class="doc-add-form">
+        <input id="doc-name-input" placeholder="Document name">
+        <input id="doc-url-input" placeholder="Link URL">
+        <button class="btn btn-sm btn-blue" onclick="addDocument()"><i class="ti ti-link"></i>Add</button>
+      </div>
+    </div>
+    <div class="drawer-section">
+      <div class="drawer-section-title">notes</div>
+      <div id="d-notes-list"></div>
+      <div class="note-input-wrap"><textarea id="note-input" placeholder="Add a note…"></textarea></div>
+      <div style="text-align:right;margin-top:8px"><button class="btn btn-blue btn-sm" onclick="addNote()"><i class="ti ti-send"></i>Add</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD TASK MODAL -->
+<div class="modal-bg" id="task-modal-bg">
+  <div class="modal">
+    <h3>add task</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">
+      <div class="modal-section"><label>Name</label><input id="new-name"></div>
+      <div class="modal-section"><label>Category</label><select id="new-cat"><option>Legal & Governance</option><option>Financial Operations</option><option>Ministry Apps</option><option>Risk & Compliance</option></select></div>
+      <div class="modal-section"><label>Owner</label><input id="new-owner"></div>
+      <div class="modal-section"><label>Due Date</label><input id="new-due" type="date"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeAddTaskModal()">Cancel</button>
+      <button class="btn btn-blue" onclick="addTask()"><i class="ti ti-plus"></i>Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CHURCH MODAL -->
+<div class="modal-bg" id="church-modal-bg">
+  <div class="modal">
+    <h3>add church plant</h3>
+    <div class="modal-section"><label>Name</label><input id="new-church-name"></div>
+    <div class="modal-section"><label>Lead Pastor</label><input id="new-church-pastor"></div>
+    <div class="modal-section"><label>Location</label><input id="new-church-city"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeAddChurchModal()">Cancel</button>
+      <button class="btn btn-blue" onclick="addChurch()"><i class="ti ti-building-church"></i>Create</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// SEED TASKS (48 total)
+function makeSeedTasks(){return[
+{id:1,cat:'Legal & Governance',phase:'Phase 1',name:'Church name',desc:'Select and reserve name',owner:'Lead Pastor',due:'',status:'Complete',priority:'High',risk:'Low'},
+{id:2,cat:'Legal & Governance',phase:'Phase 2',name:'Articles of Incorporation',desc:'File with state',owner:'Operations',due:'',status:'Complete',priority:'High',risk:'High'},
+{id:3,cat:'Legal & Governance',phase:'Phase 2',name:'Bylaws',desc:'Create bylaws',owner:'Operations',due:'',status:'Complete',priority:'High',risk:'High'},
+{id:4,cat:'Legal & Governance',phase:'Phase 2',name:'Board of Directors',desc:'Appoint board',owner:'Lead Pastor',due:'',status:'Complete',priority:'High',risk:'Medium'},
+{id:5,cat:'Legal & Governance',phase:'Phase 2',name:'EIN application',desc:'Apply for EIN',owner:'Operations',due:'',status:'Complete',priority:'High',risk:'Low'},
+{id:6,cat:'Legal & Governance',phase:'Phase 2',name:'501(c)(3)',desc:'Form 1023 submission',owner:'Operations',due:'',status:'Needs Review',priority:'High',risk:'High'},
+{id:7,cat:'Legal & Governance',phase:'Phase 2',name:'State registration',desc:'Register with state',owner:'Operations',due:'',status:'Not Started',priority:'High',risk:'Medium'},
+{id:8,cat:'Legal & Governance',phase:'Phase 2',name:'Conflict policy',desc:'Adopt policy',owner:'Operations',due:'',status:'Complete',priority:'Medium',risk:'Medium'},
+{id:9,cat:'Legal & Governance',phase:'Phase 2',name:'Document retention',desc:'Records schedule',owner:'Operations',due:'',status:'In Progress',priority:'Medium',risk:'Low'},
+{id:10,cat:'Financial Operations',phase:'Phase 3',name:'Business bank account',desc:'Open accounts',owner:'CFO',due:'',status:'Complete',priority:'High',risk:'Low'},
+{id:11,cat:'Financial Operations',phase:'Phase 3',name:'QuickBooks setup',desc:'Accounting software',owner:'CFO',due:'',status:'In Progress',priority:'High',risk:'Medium'},
+{id:12,cat:'Financial Operations',phase:'Phase 3',name:'Chart of accounts',desc:'Build structure',owner:'CFO',due:'',status:'In Progress',priority:'High',risk:'Medium'},
+{id:13,cat:'Financial Operations',phase:'Phase 3',name:'Annual budget',desc:'First year budget',owner:'CFO',due:'',status:'Needs Review',priority:'High',risk:'High'},
+{id:14,cat:'Financial Operations',phase:'Phase 3',name:'Donation tracking',desc:'Gift process',owner:'Office',due:'',status:'Not Started',priority:'High',risk:'Medium'},
+{id:15,cat:'Financial Operations',phase:'Phase 3',name:'Payroll setup',desc:'Staff payroll',owner:'CFO',due:'',status:'Not Started',priority:'High',risk:'High'},
+{id:16,cat:'Financial Operations',phase:'Phase 3',name:'Credit card policy',desc:'Usage policy',owner:'CFO',due:'',status:'Not Started',priority:'Medium',risk:'Medium'},
+{id:17,cat:'Financial Operations',phase:'Phase 3',name:'Reimbursement',desc:'Expense policy',owner:'Operations',due:'',status:'Not Started',priority:'Medium',risk:'Low'},
+{id:18,cat:'Financial Operations',phase:'Phase 4',name:'Monthly reporting',desc:'Board reporting',owner:'CFO',due:'',status:'Not Started',priority:'High',risk:'Low'},
+{id:19,cat:'Financial Operations',phase:'Phase 7',name:'Year-end audit prep',desc:'Annual review',owner:'CFO',due:'',status:'Not Started',priority:'Medium',risk:'Medium'},
+{id:20,cat:'Ministry Apps',phase:'Phase 3',name:'Giving platform',desc:'Online giving',owner:'Operations',due:'',status:'Complete',priority:'High',risk:'Low'},
+{id:21,cat:'Ministry Apps',phase:'Phase 3',name:'ChMS setup',desc:'Member system',owner:'Office',due:'',status:'In Progress',priority:'High',risk:'Low'},
+{id:22,cat:'Ministry Apps',phase:'Phase 3',name:'Planning Center',desc:'Worship scheduling',owner:'Worship',due:'',status:'Not Started',priority:'Medium',risk:'Low'},
+{id:23,cat:'Ministry Apps',phase:'Phase 3',name:'Bill.com setup',desc:'Payables platform',owner:'CFO',due:'',status:'Not Started',priority:'Medium',risk:'Medium'},
+{id:24,cat:'Ministry Apps',phase:'Phase 3',name:'Google Workspace',desc:'Email setup',owner:'Operations',due:'',status:'Complete',priority:'Medium',risk:'Low'},
+{id:25,cat:'Ministry Apps',phase:'Phase 3',name:'Church website',desc:'Website launch',owner:'Comms',due:'',status:'In Progress',priority:'High',risk:'Low'},
+{id:26,cat:'Ministry Apps',phase:'Phase 4',name:'Text-to-give',desc:'Text giving',owner:'Operations',due:'',status:'Not Started',priority:'Medium',risk:'Low'},
+{id:27,cat:'Ministry Apps',phase:'Phase 4',name:'Recurring giving',desc:'Recurring option',owner:'Office',due:'',status:'Not Started',priority:'Medium',risk:'Low'},
+{id:28,cat:'Ministry Apps',phase:'Phase 7',name:'Year-end statements',desc:'Tax statements',owner:'Office',due:'',status:'Not Started',priority:'High',risk:'Medium'},
+{id:29,cat:'Risk & Compliance',phase:'Phase 4',name:'General liability',desc:'GL insurance',owner:'Operations',due:'',status:'In Progress',priority:'High',risk:'High'},
+{id:30,cat:'Risk & Compliance',phase:'Phase 4',name:'Workers comp',desc:'Workers comp insurance',owner:'Operations',due:'',status:'Not Started',priority:'High',risk:'High'},
+{id:31,cat:'Risk & Compliance',phase:'Phase 4',name:'Health benefits',desc:'Employee benefits',owner:'CFO',due:'',status:'Not Started',priority:'Medium',risk:'Medium'},
+{id:32,cat:'Risk & Compliance',phase:'Phase 4',name:'Child safety',desc:'Protection policy',owner:'Executive',due:'',status:'Needs Review',priority:'High',risk:'High'},
+{id:33,cat:'Risk & Compliance',phase:'Phase 4',name:'Background checks',desc:'Screening system',owner:'HR',due:'',status:'Needs Review',priority:'High',risk:'High'},
+{id:34,cat:'Risk & Compliance',phase:'Phase 4',name:'Volunteer screening',desc:'Volunteer policy',owner:'HR',due:'',status:'Not Started',priority:'High',risk:'High'},
+{id:35,cat:'Risk & Compliance',phase:'Phase 5',name:'Facility use',desc:'Facility agreement',owner:'Operations',due:'',status:'Not Started',priority:'Medium',risk:'Medium'},
+{id:36,cat:'Risk & Compliance',phase:'Phase 5',name:'Data security',desc:'Data privacy',owner:'Operations',due:'',status:'Not Started',priority:'Medium',risk:'Medium'},
+{id:37,cat:'Risk & Compliance',phase:'Phase 5',name:'Emergency procedures',desc:'Emergency response',owner:'Operations',due:'',status:'Not Started',priority:'High',risk:'High'},
+{id:38,cat:'Strategic Planning',phase:'Phase 1',name:'Mission statement',desc:'Mission',owner:'Lead Pastor',due:'',status:'Complete',priority:'High',risk:'Low'},
+{id:39,cat:'Strategic Planning',phase:'Phase 1',name:'Vision statement',desc:'Vision',owner:'Lead Pastor',due:'',status:'Complete',priority:'High',risk:'Low'},
+{id:40,cat:'Strategic Planning',phase:'Phase 1',name:'Core values',desc:'Values',owner:'Lead Pastor',due:'',status:'Complete',priority:'High',risk:'Low'},
+{id:41,cat:'Strategic Planning',phase:'Phase 1',name:'Launch timeline',desc:'Timeline',owner:'Operations',due:'',status:'Complete',priority:'High',risk:'Medium'},
+{id:42,cat:'Strategic Planning',phase:'Phase 2',name:'Ministry model',desc:'Discipleship approach',owner:'Lead Pastor',due:'',status:'In Progress',priority:'High',risk:'Low'},
+{id:43,cat:'Strategic Planning',phase:'Phase 3',name:'Staffing plan',desc:'Year 1 staffing',owner:'Executive',due:'',status:'In Progress',priority:'High',risk:'Medium'},
+{id:44,cat:'Strategic Planning',phase:'Phase 3',name:'Volunteer plan',desc:'Volunteer structure',owner:'Volunteer',due:'',status:'Not Started',priority:'Medium',risk:'Low'},
+{id:45,cat:'Strategic Planning',phase:'Phase 3',name:'3-year forecast',desc:'Financial forecast',owner:'CFO',due:'',status:'Not Started',priority:'High',risk:'Medium'},
+{id:46,cat:'Strategic Planning',phase:'Phase 4',name:'Community outreach',desc:'Outreach plan',owner:'Lead Pastor',due:'',status:'Not Started',priority:'Medium',risk:'Low'},
+{id:47,cat:'Strategic Planning',phase:'Phase 4',name:'Marketing plan',desc:'Launch campaign',owner:'Comms',due:'',status:'Not Started',priority:'Medium',risk:'Low'},
+{id:48,cat:'Strategic Planning',phase:'Phase 6',name:'Success metrics',desc:'KPIs',owner:'Executive',due:'',status:'Not Started',priority:'High',risk:'Low'},
+];}
+
+let churches=[],activeChurchId=null,activeTaskId=null,taskMeta={};
+let currentFilter='all';
+
+function lsGet(k){try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+
+async function loadAll(){
+  let saved=lsGet('churches-v1');
+  if(saved&&saved.length){churches=saved;}
+  else{churches=[{id:'plant1',name:'242 Community Church',pastor:'Lead Pastor',city:'',launch:'',tasks:makeSeedTasks()},{id:'plant2',name:'Riverside Plant',pastor:'Pastor Smith',city:'',launch:'',tasks:makeSeedTasks().map(t=>({...t,status:'Not Started',due:''}))}];}
+  let meta=lsGet('task-meta-v1');
+  if(meta)taskMeta=meta;
+  activeChurchId=churches[0].id;
+}
+
+function save(){lsSet('churches-v1',churches);lsSet('task-meta-v1',taskMeta);document.getElementById('save-toast').style.display='flex';clearTimeout(window._st);window._st=setTimeout(()=>document.getElementById('save-toast').style.display='none',2000);}
+
+function getChurch(id){return churches.find(c=>c.id===(id||activeChurchId));}
+function getTasks(){return getChurch()?.tasks||[];}
+function getMeta(cid,tid){const k=`${cid}__${tid}`;if(!taskMeta[k])taskMeta[k]={notes:[],docs:[],updatedAt:null};return taskMeta[k];}
+
+const sBadge=s=>({'Complete':'<span class="badge badge-complete"><i class="ti ti-check"></i>Complete</span>','In Progress':'<span class="badge badge-progress"><i class="ti ti-clock"></i>In Progress</span>','Needs Review':'<span class="badge badge-review"><i class="ti ti-eye"></i>Review</span>','Not Started':'<span class="badge badge-notstarted">Not Started</span>'}[s]||s);
+const pBadge=p=>({'High':'<span class="badge badge-high">High</span>','Medium':'<span class="badge badge-medium">Med</span>','Low':'<span class="badge badge-low">Low</span>'}[p]||p);
+const ownerChip=o=>{const i=o.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();return`<span class="owner-chip"><span class="owner-av">${i}</span>${o}</span>`;};
+function fmtTs(ts){if(!ts)return'';const d=new Date(ts);return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+function fmtDate(s){if(!s)return'—';const[y,m,d]=s.split('-');const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return`${mo[parseInt(m)-1]} ${parseInt(d)}`;}
+
+function renderTabs(){
+  const c=document.getElementById('church-tabs');
+  c.innerHTML=churches.map(ch=>`<div class="church-tab ${ch.id===activeChurchId?'active-tab':''}" onclick="switchChurch('${ch.id}')">${ch.name}</div>`).join('')+`<div class="add-church-btn" onclick="openAddChurchModal()"><i class="ti ti-plus"></i></div>`;
+}
+
+async function switchChurch(id){activeChurchId=id;currentFilter='all';renderTabs();const nav=document.querySelector('.nav-item.active');showPage(nav?.getAttribute('onclick')?.match(/showPage\('(\w+)/)?.[1]||'dashboard',nav);}
+
+function showPage(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(el){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active');}
+  const catMap={legal:'Legal & Governance',finance:'Financial Operations',apps:'Ministry Apps',risk:'Risk & Compliance'};
+  if(catMap[id])setTimeout(()=>renderTable(id+'-tbody',catMap[id]),30);
+  if(id==='dashboard')renderDashboard();
+  if(id==='playbook')renderPlaybook();
+  if(id==='report')renderReport();
+  if(id==='overview')renderOverview();
+}
+
+function renderDashboard(){
+  const tasks=getTasks(),done=tasks.filter(t=>t.status==='Complete').length,pct=Math.round(done/tasks.length*100),overdue=tasks.filter(t=>t.due&&new Date(t.due)<new Date()&&t.status!=='Complete').length,needsRev=tasks.filter(t=>t.status==='Needs Review').length;
+  document.getElementById('metric-cards').innerHTML=`
+    <div class="metric"><div class="metric-label">Readiness</div><div class="metric-value" style="color:var(--blue)">${pct}%</div><div class="metric-bar"><div class="metric-bar-fill" style="width:${pct}%"></div></div><div class="metric-sub">${done}/${tasks.length} complete</div></div>
+    <div class="metric"><div class="metric-label">Overdue</div><div class="metric-value" style="color:var(--danger)">${overdue}</div><div class="metric-sub">Need attention</div></div>
+    <div class="metric"><div class="metric-label">Needs Review</div><div class="metric-value" style="color:var(--warning)">${needsRev}</div><div class="metric-sub">Prof. review</div></div>
+    <div class="metric"><div class="metric-label">Phase</div><div class="metric-value" style="font-size:20px">3</div><div class="metric-sub">Financial Infra</div></div>`;
+  const phases=['Phase 1','Phase 2','Phase 3','Phase 4','Phase 5','Phase 6','Phase 7'];
+  document.getElementById('phase-bar').innerHTML=phases.map((ph,i)=>{const pt=tasks.filter(t=>t.phase===ph),d=pt.filter(t=>t.status==='Complete').length,allDone=pt.length>0&&d===pt.length;return`<div class="phase-item ${allDone?'phase-done':ph==='Phase 3'?'phase-active':'phase-pending'}"><span class="phase-num">${i+1}</span>Ph ${i+1}</div>`;}).join('');
+  const cats=['Legal & Governance','Financial Operations','Ministry Apps','Risk & Compliance','Strategic Planning'],colors=['#508dba','#449c4e','#db8952','#c0392b','#7b7b7b'];
+  document.getElementById('category-breakdown').innerHTML=cats.map((cat,i)=>{const t=tasks.filter(x=>x.cat===cat),d=t.filter(x=>x.status==='Complete').length,pct=t.length?Math.round(d/t.length*100):0;return`<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span>${cat}</span><span>${d}/${t.length}</span></div><div class="metric-bar"><div class="metric-bar-fill" style="width:${pct}%;background:${colors[i]}"></div></div></div>`;}).join('');
+  const soon=tasks.filter(t=>t.status!=='Complete'&&t.priority==='High').slice(0,6);
+  document.getElementById('priority-list').innerHTML=soon.map(t=>`<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f5f5f5;cursor:pointer" onclick="openDrawer(${t.id})"><div><div style="font-weight:600">${t.name}</div><div style="font-size:10px;color:var(--grey-mid)">${t.cat}</div></div>${sBadge(t.status)}</div>`).join('')||'<div style="color:var(--grey-mid)">No high priority tasks.</div>';
+  renderTable('task-tbody');
+}
+
+function renderTable(tbodyId,catFilter){
+  const tasks=getTasks(),search=(document.getElementById('search-input')||{}).value||'';
+  let filtered=tasks.filter(t=>{if(catFilter&&t.cat!==catFilter)return false;if(!catFilter&&currentFilter!=='all'&&t.status!==currentFilter)return false;if(search&&!t.name.toLowerCase().includes(search.toLowerCase()))return false;return true;});
+  const html=filtered.map(t=>{const m=getMeta(activeChurchId,t.id);return`<tr onclick="openDrawer(${t.id})"><td><input type="checkbox" ${t.status==='Complete'?'checked':''} onclick="event.stopPropagation();toggleComplete(${t.id},this.checked)" style="accent-color:var(--blue)"></td><td><div style="font-weight:600;${t.status==='Complete'?'text-decoration:line-through;color:#999':''}">${t.name}</div></td>${!catFilter?`<td><span class="phase-tag">${t.cat.split(' ')[0]}</span></td>`:''}${!catFilter?`<td>${ownerChip(t.owner)}</td>`:'<td></td>'}<td>${fmtDate(t.due)}</td><td>${sBadge(t.status)}</td><td>${pBadge(t.priority)}</td><td>${m.docs.length?`<span class="doc-count"><i class="ti ti-paperclip"></i>${m.docs.length}</span>`:''}</td></tr>`;}).join('');
+  const tbody=document.getElementById(tbodyId);
+  if(tbody)tbody.innerHTML=html||'<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--grey-mid)">No tasks.</td></tr>';
+}
+
+function setFilter(f,el){currentFilter=f;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active-f'));el.classList.add('active-f');renderTable('task-tbody');}
+
+async function toggleComplete(id,checked){
+  const church=getChurch(),t=church.tasks.find(x=>x.id===id);
+  if(!t)return;
+  t.status=checked?'Complete':'In Progress';
+  const m=getMeta(activeChurchId,id);
+  m.updatedAt=new Date().toISOString();
+  save();renderDashboard();if(activeTaskId===id)refreshDrawer();
+}
+
+function openDrawer(id){activeTaskId=id;document.getElementById('drawer-overlay').classList.add('open');document.getElementById('drawer').classList.add('open');refreshDrawer();}
+function closeDrawer(){document.getElementById('drawer-overlay').classList.remove('open');document.getElementById('drawer').classList.remove('open');activeTaskId=null;}
+
+function refreshDrawer(){
+  const t=getChurch().tasks.find(x=>x.id===activeTaskId);
+  if(!t)return;
+  const m=getMeta(activeChurchId,activeTaskId);
+  document.getElementById('d-title').textContent=t.name;
+  document.getElementById('d-cat').textContent=`${t.cat} · ${t.phase}`;
+  document.getElementById('d-status').value=t.status;
+  document.getElementById('d-priority').value=t.priority;
+  document.getElementById('d-owner').value=t.owner;
+  document.getElementById('d-due').value=t.due||'';
+  renderDrawerDocs();renderDrawerNotes();
+}
+
+async function updateField(field,val){
+  const church=getChurch(),t=church.tasks.find(x=>x.id===activeTaskId);
+  if(!t)return;
+  t[field]=val;
+  const m=getMeta(activeChurchId,activeTaskId);
+  m.updatedAt=new Date().toISOString();
+  save();renderDashboard();
+}
+
+function renderDrawerDocs(){
+  const m=getMeta(activeChurchId,activeTaskId);
+  document.getElementById('d-docs-list').innerHTML=m.docs.length?m.docs.map((d,i)=>`<div class="doc-item"><div class="doc-item-left"><i class="ti ti-file-text"></i><div><div class="doc-name">${d.name}</div><a class="doc-url" href="${d.url}" target="_blank">${d.url}</a></div></div><button class="doc-remove" onclick="removeDoc(${i})"><i class="ti ti-trash"></i></button></div>`).join(''):'<div style="font-size:12px;color:var(--grey-mid)">No documents.</div>';
+}
+
+async function addDocument(){
+  const name=document.getElementById('doc-name-input').value.trim(),url=document.getElementById('doc-url-input').value.trim();
+  if(!name||!url)return;
+  const m=getMeta(activeChurchId,activeTaskId);
+  m.docs.push({name,url});
+  document.getElementById('doc-name-input').value='';document.getElementById('doc-url-input').value='';
+  save();renderDrawerDocs();
+}
+
+async function removeDoc(idx){
+  const m=getMeta(activeChurchId,activeTaskId);
+  m.docs.splice(idx,1);
+  save();renderDrawerDocs();
+}
+
+function renderDrawerNotes(){
+  const m=getMeta(activeChurchId,activeTaskId);
+  document.getElementById('d-notes-list').innerHTML=m.notes.length?[...m.notes].reverse().map(n=>`<div class="note-entry"><div class="note-ts"><strong>${n.author}</strong> · ${fmtTs(n.ts)}</div><div class="note-text">${n.text}</div></div>`).join(''):'<div style="font-size:12px;color:var(--grey-mid)">No notes.</div>';
+}
+
+async function addNote(){
+  const input=document.getElementById('note-input'),text=input.value.trim();if(!text)return;
+  const m=getMeta(activeChurchId,activeTaskId),t=getChurch().tasks.find(x=>x.id===activeTaskId);
+  m.notes.push({text,ts:new Date().toISOString(),author:t?t.owner:'Team'});
+  input.value='';
+  save();renderDrawerNotes();
+}
+
+function renderPlaybook(){
+  const tasks=getTasks(),done=tasks.filter(t=>t.status==='Complete').length,pct=Math.round(done/tasks.length*100);
+  document.getElementById('pb-metrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Total</div><div class="metric-value">${tasks.length}</div></div>
+    <div class="metric"><div class="metric-label">Complete</div><div class="metric-value" style="color:var(--green)">${done}</div><div class="metric-sub">${pct}%</div></div>
+    <div class="metric"><div class="metric-label">Plant</div><div class="metric-value" style="font-size:14px;margin-top:4px">${getChurch()?.name}</div></div>
+    <div class="metric"><div class="metric-label">Phase</div><div class="metric-value">3</div></div>`;
+  const phases=['Phase 1','Phase 2','Phase 3','Phase 4','Phase 5','Phase 6','Phase 7'];
+  document.getElementById('playbook-phases').innerHTML=phases.map((ph,i)=>{const pt=tasks.filter(t=>t.phase===ph),d=pt.filter(t=>t.status==='Complete').length,pct=pt.length?Math.round(d/pt.length*100):0;return`<div class="playbook-card"><div class="playbook-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='block'?'none':'block'"><div style="flex:1"><div style="font-weight:700">${ph}</div><div style="font-size:10px;color:var(--grey-mid)">${d}/${pt.length} · ${pct}%</div></div><div style="width:80px"><div class="metric-bar"><div class="metric-bar-fill" style="width:${pct}%"></div></div></div><i class="ti ti-chevron-down"></i></div><div class="playbook-body">${pt.map(t=>`<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f5f5f5"><div><input type="checkbox" ${t.status==='Complete'?'checked':''} onclick="toggleComplete(${t.id},this.checked)" style="accent-color:var(--blue);margin-right:8px"><span>${t.name}</span></div><div>${sBadge(t.status)}</div></div>`).join('')}</div></div>`;}).join('');
+}
+
+function renderReport(){
+  const tasks=getTasks(),done=tasks.filter(t=>t.status==='Complete').length,pct=Math.round(done/tasks.length*100),cats=['Legal & Governance','Financial Operations','Ministry Apps','Risk & Compliance'];
+  const rows=cats.map(cat=>{const t=tasks.filter(x=>x.cat===cat),d=t.filter(x=>x.status==='Complete').length,p=t.length?Math.round(d/t.length*100):0;return`<div class="report-row"><span>${cat}</span><div style="display:flex;gap:12px;align-items:center"><div style="width:100px"><div class="metric-bar"><div class="metric-bar-fill" style="width:${p}%"></div></div></div><span>${p}%</span></div></div>`;}).join('');
+  document.getElementById('report-body').innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px">
+    <div class="metric"><div class="metric-label">Readiness</div><div class="metric-value" style="color:var(--blue)">${pct}%</div><div class="metric-bar"><div class="metric-bar-fill" style="width:${pct}%"></div></div></div>
+    <div class="metric"><div class="metric-label">Complete</div><div class="metric-value">${done}/${tasks.length}</div></div>
+    <div class="metric"><div class="metric-label">Plant</div><div class="metric-value" style="font-size:14px">${getChurch()?.name}</div></div>
+  </div><div class="report-section"><h4>Progress</h4>${rows}</div>`;
+}
+
+function renderOverview(){
+  document.getElementById('overview-grid').innerHTML=churches.map(c=>{const done=c.tasks.filter(t=>t.status==='Complete').length,pct=Math.round(done/c.tasks.length*100);return`<div class="church-overview-card" onclick="switchChurch('${c.id}');showPage('dashboard',document.querySelector('[onclick*=dashboard]'))"><div style="display:flex;justify-content:space-between;margin-bottom:14px"><div><div style="font-weight:700">${c.name}</div><div style="font-size:11px;color:var(--grey-mid)">${c.pastor}${c.city?' · '+c.city:''}</div></div><span class="badge ${pct===100?'badge-complete':pct>0?'badge-progress':'badge-notstarted'}">${pct}%</span></div><div class="metric-bar"><div class="metric-bar-fill" style="width:${pct}%"></div></div></div>`;}).join('');
+}
+
+function openAddTaskModal(){document.getElementById('task-modal-bg').classList.add('open');}
+function closeAddTaskModal(){document.getElementById('task-modal-bg').classList.remove('open');}
+async function addTask(){
+  const name=document.getElementById('new-name').value.trim();if(!name)return;
+  const church=getChurch(),maxId=church.tasks.reduce((m,t)=>Math.max(m,t.id),0);
+  church.tasks.push({id:maxId+1,cat:document.getElementById('new-cat').value,phase:'Phase 3',name,owner:document.getElementById('new-owner').value||'Unassigned',due:document.getElementById('new-due').value,status:'Not Started',priority:'High',risk:'Medium'});
+  save();closeAddTaskModal();renderDashboard();['new-name','new-owner','new-due'].forEach(id=>document.getElementById(id).value='');
+}
+document.getElementById('task-modal-bg').addEventListener('click',e=>{if(e.target===document.getElementById('task-modal-bg'))closeAddTaskModal();});
+
+function openAddChurchModal(){document.getElementById('church-modal-bg').classList.add('open');}
+function closeAddChurchModal(){document.getElementById('church-modal-bg').classList.remove('open');}
+async function addChurch(){
+  const name=document.getElementById('new-church-name').value.trim();if(!name)return;
+  const id='plant-'+(churches.length+1);
+  churches.push({id,name,pastor:document.getElementById('new-church-pastor').value||'Lead Pastor',city:document.getElementById('new-church-city').value,launch:'',tasks:makeSeedTasks().map(t=>({...t,status:'Not Started',due:'',owner:'Lead Pastor'}))});
+  save();closeAddChurchModal();['new-church-name','new-church-pastor','new-church-city'].forEach(i=>document.getElementById(i).value='');
+  renderTabs();await switchChurch(id);
+}
+document.getElementById('church-modal-bg').addEventListener('click',e=>{if(e.target===document.getElementById('church-modal-bg'))closeAddChurchModal();});
+
+(async()=>{await loadAll();renderTabs();renderDashboard();})();
+</script>
+</body>
+</html>
