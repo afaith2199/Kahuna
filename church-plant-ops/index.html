@@ -330,6 +330,8 @@ body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;background:#f2f2f0;
   </div>
 </div>
 
+<div id="error-banner" style="display:none;position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#c0392b;color:#fff;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:2000;max-width:90vw;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.2)"></div>
+
 <div id="loading-overlay" style="display:none;position:fixed;inset:0;background:rgba(242,242,240,.8);z-index:200;align-items:center;justify-content:center"><div style="text-align:center;color:var(--grey-mid)"><i class="ti ti-loader" style="font-size:28px;display:block;animation:spin 1s linear infinite"></i><div style="margin-top:12px;font-size:13px">Loading…</div></div></div>
 
 <div id="save-toast" style="display:none;position:fixed;bottom:20px;right:20px;background:#4f4f4f;color:#fff;padding:9px 16px;border-radius:6px;font-size:12px;font-weight:600;z-index:999;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,.2)"><i class="ti ti-check" style="color:#4caf72"></i>Saved</div>
@@ -541,7 +543,7 @@ async function loadAll(){
     .from('church_members')
     .select('church_id,role,churches(id,name,pastor,city)')
     .eq('user_id',currentUser.id);
-  if(error){console.error(error);return;}
+  if(error){showError('Database error: '+error.message+' — Have you run supabase/schema.sql in your Supabase SQL Editor?');return;}
 
   churches=[];
   if(!memberships?.length){await createDefaultChurch();return;}
@@ -568,7 +570,7 @@ async function createDefaultChurch(){
     .from('churches')
     .insert({name:'Evergrove Church',pastor:'Lead Pastor',city:''})
     .select().single();
-  if(error){console.error(error);return;}
+  if(error){showError('Could not create church: '+error.message);return;}
   await sb.from('church_members').insert({church_id:church.id,user_id:currentUser.id,role:'admin'});
   const taskRows=makeSeedTasks().map(t=>({
     church_id:church.id,local_id:t.id,cat:t.cat,phase:t.phase,
@@ -577,6 +579,13 @@ async function createDefaultChurch(){
   }));
   await sb.from('tasks').insert(taskRows);
   await loadAll();
+}
+
+function showError(msg){
+  hideLoading();
+  const el=document.getElementById('error-banner');
+  el.textContent=msg;el.style.display='block';
+  setTimeout(()=>el.style.display='none',8000);
 }
 
 function showSaveToast(){
